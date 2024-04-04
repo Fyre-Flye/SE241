@@ -1273,7 +1273,7 @@ int main(void)
  8000f50:	63fb      	str	r3, [r7, #60]	@ 0x3c
   char buffer[50];
 
-  // Configuração inicial do LED LD2
+  // Config LED LD2
   HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // LED LD2 desligado
  8000f52:	2200      	movs	r2, #0
  8000f54:	2120      	movs	r1, #32
@@ -1410,7 +1410,7 @@ int main(void)
  8001066:	2032      	movs	r0, #50	@ 0x32
  8001068:	f000 fb86 	bl	8001778 <HAL_Delay>
     }
-    HAL_Delay(300); // Intervalo reduzido para 300ms entre as leituras
+    HAL_Delay(300); // Intervalo para 300ms entre as leituras
  800106c:	f44f 7096 	mov.w	r0, #300	@ 0x12c
  8001070:	f000 fb82 	bl	8001778 <HAL_Delay>
   {
@@ -1698,7 +1698,7 @@ void sendTriggerPulse(void)
 
 08001230 <measureDistance>:
 
-#define MAX_DISTANCE 100.0 // Defina a distância máxima desejada em centímetros
+#define MAX_DISTANCE 100.0 // distancia maxima em CM
 
 float measureDistance(void)
 {
@@ -1713,7 +1713,7 @@ float measureDistance(void)
   uint32_t stopTime = 0;
  800123e:	2300      	movs	r3, #0
  8001240:	613b      	str	r3, [r7, #16]
-  uint32_t timeout = 1000000; // 1 segundo de timeout
+  uint32_t timeout = 100000; // 1 segundo de timeout entre os pulsos
  8001242:	4b2f      	ldr	r3, [pc, #188]	@ (8001300 <measureDistance+0xd0>)
  8001244:	60fb      	str	r3, [r7, #12]
 
@@ -1820,7 +1820,7 @@ float measureDistance(void)
  80012f4:	f3af 8000 	nop.w
  80012f8:	00000000 	.word	0x00000000
  80012fc:	40e0bf80 	.word	0x40e0bf80
- 8001300:	000f4240 	.word	0x000f4240
+ 8001300:	000186a0 	.word	0x000186a0
  8001304:	bf800000 	.word	0xbf800000
  8001308:	409f4000 	.word	0x409f4000
  800130c:	42c80000 	.word	0x42c80000

@@ -31,7 +31,7 @@ int main(void)
   float lastDistance = -1.0;
   char buffer[50];
 
-  // Configuração inicial do LED LD2
+  // Config LED LD2
   HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // LED LD2 desligado
 
   while (1)
@@ -43,12 +43,12 @@ int main(void)
       {
         if (distance < lastDistance)
         {
-          sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO)\r\n", distance);
+          sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO) [PISTA LIBERADA]\r\n", distance);
           HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (pouso)
         }
         else if (distance > lastDistance)
         {
-          sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO)\r\n", distance);
+          sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO) [PISTA BLOQUEADA]\r\n", distance);
           HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (decolagem)
         }
       }
@@ -72,7 +72,7 @@ int main(void)
       HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
       HAL_Delay(50);
     }
-    HAL_Delay(300); // Intervalo reduzido para 300ms entre as leituras
+    HAL_Delay(300); // Intervalo para 300ms entre as leituras
   }
 }
 
@@ -158,14 +158,14 @@ void sendTriggerPulse(void)
   HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
 }
 
-#define MAX_DISTANCE 100.0 // Defina a distância máxima desejada em centímetros
+#define MAX_DISTANCE 100.0 // distancia maxima em CM
 
 float measureDistance(void)
 {
   sendTriggerPulse();
   uint32_t startTime = 0;
   uint32_t stopTime = 0;
-  uint32_t timeout = 1000000; // 1 segundo de timeout
+  uint32_t timeout = 1000000; // 1 segundo de timeout entre os pulsos
 
   while (HAL_GPIO_ReadPin(ECHO_PORT, ECHO_PIN) == GPIO_PIN_RESET)
   {
