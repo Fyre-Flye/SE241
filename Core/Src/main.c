@@ -7,14 +7,6 @@
 
 UART_HandleTypeDef huart2;
 
-#define TRIG_PIN GPIO_PIN_0 // A0
-#define TRIG_PORT GPIOA
-#define ECHO_PIN GPIO_PIN_1 // A1
-#define ECHO_PORT GPIOA
-#define SOUND_SPEED 34300.0 // Velocidade do som em cm/s
-#define LED_LD2_PIN GPIO_PIN_5 // LD2
-#define LED_LD2_PORT GPIOA
-
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
@@ -31,8 +23,9 @@ int main(void)
   float lastDistance = -1.0;
   char buffer[50];
 
-  // Config LED LD2
-  HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // LED LD2 desligado
+  // Config LED LD2 e LEDs no CN9
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // LED LD2 desligado
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_SET); // LEDs vermelho, verde e branco desligados
 
   while (1)
   {
@@ -44,20 +37,26 @@ int main(void)
         if (distance < lastDistance)
         {
           sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO) [PISTA LIBERADA]\r\n", distance);
-          HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (pouso)
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (pouso)
+          HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED vermelho
+          HAL_GPIO_WritePin(GPIOD, GPIO_PIN_6, GPIO_PIN_RESET); // Desliga o LED verde
         }
         else if (distance > lastDistance)
         {
           sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO) [PISTA BLOQUEADA]\r\n", distance);
-          HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (decolagem)
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (decolagem)
+          HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET); // Desliga o LED vermelho
+          HAL_GPIO_WritePin(GPIOD, GPIO_PIN_6, GPIO_PIN_SET); // Liga o LED verde
         }
       }
       else
       {
         sprintf(buffer, "DIST OBJ: %.2f CM, (AVIÃO DETECTADO NA PISTA)\r\n", distance);
-        HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET); // Liga o LED branco (piscando)
         HAL_Delay(50);
-        HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET); // Desliga o LED branco (piscando)
         HAL_Delay(50);
       }
 
@@ -67,9 +66,11 @@ int main(void)
     else
     {
       HAL_UART_Transmit(&huart2, (uint8_t *)"BUSCANDO...\r\n", strlen("BUSCANDO...\r\n"), HAL_MAX_DELAY);
-      HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET); // Liga o LED branco (piscando)
       HAL_Delay(50);
-      HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+      HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET); // Desliga o LED branco (piscando)
       HAL_Delay(50);
     }
     HAL_Delay(300); // Intervalo para 300ms entre as leituras
@@ -113,24 +114,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
-  // Configuração do pino do LED LD2 (PA5)
+  // Configuração dos pinos de LED LD2, vermelho, verde e branco
   GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // Voltagem máxima
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // Voltagem máxima
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = TRIG_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(TRIG_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = ECHO_PIN;
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO_PORT, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 static void MX_USART2_UART_Init(void)
@@ -153,9 +161,9 @@ static void MX_USART2_UART_Init(void)
 
 void sendTriggerPulse(void)
 {
-  HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
   HAL_Delay(10);
-  HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
 }
 
 #define MAX_DISTANCE 100.0 // distancia maxima em CM
@@ -167,7 +175,7 @@ float measureDistance(void)
   uint32_t stopTime = 0;
   uint32_t timeout = 1000000; // 1 segundo de timeout entre os pulsos
 
-  while (HAL_GPIO_ReadPin(ECHO_PORT, ECHO_PIN) == GPIO_PIN_RESET)
+  while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_RESET)
   {
     startTime = HAL_GetTick();
     if (startTime > timeout)
@@ -176,7 +184,7 @@ float measureDistance(void)
     }
   }
 
-  while (HAL_GPIO_ReadPin(ECHO_PORT, ECHO_PIN) == GPIO_PIN_SET)
+  while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_SET)
   {
     stopTime = HAL_GetTick();
     if ((stopTime - startTime) > timeout)
@@ -186,7 +194,7 @@ float measureDistance(void)
   }
 
   uint32_t pulseDuration = stopTime - startTime;
-  float distance = (SOUND_SPEED * pulseDuration) / (2.0 * 1000.0); // Converter para centímetros
+  float distance = (34300.0 * pulseDuration) / (2.0 * 1000.0); // Converter para centímetros
 
   // Verifica se a distância medida é maior que a distância máxima
   if (distance > MAX_DISTANCE)
