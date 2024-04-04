@@ -12,6 +12,8 @@ UART_HandleTypeDef huart2;
 #define ECHO_PIN GPIO_PIN_1 // A1
 #define ECHO_PORT GPIOA
 #define SOUND_SPEED 34300.0 // Velocidade do som em cm/s
+#define LED_LD2_PIN GPIO_PIN_5 // LD2
+#define LED_LD2_PORT GPIOA
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -26,20 +28,51 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
 
+  float lastDistance = -1.0;
+  char buffer[50];
+
+  // Configuração inicial do LED LD2
+  HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // LED LD2 desligado
+
   while (1)
   {
     float distance = measureDistance();
-    if (distance >= 0.0)
+    if (distance > 0.0)
     {
-      char buffer[50];
-      sprintf(buffer, "Distancia medida: %.2f centimetros\r\n", distance);
+      if (lastDistance >= 0.0)
+      {
+        if (distance < lastDistance)
+        {
+          sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO)\r\n", distance);
+          HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (pouso)
+        }
+        else if (distance > lastDistance)
+        {
+          sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO)\r\n", distance);
+          HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (decolagem)
+        }
+      }
+      else
+      {
+        sprintf(buffer, "DIST OBJ: %.2f CM, (AVIÃO DETECTADO NA PISTA)\r\n", distance);
+        HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+        HAL_Delay(50);
+        HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+        HAL_Delay(50);
+      }
+
       HAL_UART_Transmit(&huart2, (uint8_t *)buffer, strlen(buffer), HAL_MAX_DELAY);
+      lastDistance = distance;
     }
     else
     {
-      HAL_UART_Transmit(&huart2, (uint8_t *)"Falha ao medir a distancia.\r\n", 30, HAL_MAX_DELAY);
+      HAL_UART_Transmit(&huart2, (uint8_t *)"BUSCANDO...\r\n", strlen("BUSCANDO...\r\n"), HAL_MAX_DELAY);
+      HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_SET); // Liga o LED LD2 (busca)
+      HAL_Delay(50);
+      HAL_GPIO_WritePin(LED_LD2_PORT, LED_LD2_PIN, GPIO_PIN_RESET); // Desliga o LED LD2 (busca)
+      HAL_Delay(50);
     }
-    HAL_Delay(100); // Intervalo reduzido para 100ms entre as leituras
+    HAL_Delay(300); // Intervalo reduzido para 300ms entre as leituras
   }
 }
 
@@ -81,6 +114,13 @@ static void MX_GPIO_Init(void)
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
+  // Configuração do pino do LED LD2 (PA5)
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = TRIG_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -118,6 +158,8 @@ void sendTriggerPulse(void)
   HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
 }
 
+#define MAX_DISTANCE 100.0 // Defina a distância máxima desejada em centímetros
+
 float measureDistance(void)
 {
   sendTriggerPulse();
@@ -145,6 +187,13 @@ float measureDistance(void)
 
   uint32_t pulseDuration = stopTime - startTime;
   float distance = (SOUND_SPEED * pulseDuration) / (2.0 * 1000.0); // Converter para centímetros
+
+  // Verifica se a distância medida é maior que a distância máxima
+  if (distance > MAX_DISTANCE)
+  {
+    return -1.0; // Distância maior que a máxima desejada
+  }
+
   return distance;
 }
 

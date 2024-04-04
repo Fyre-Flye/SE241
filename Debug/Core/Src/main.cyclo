@@ -1,7 +1,7 @@
-../Core/Src/main.c:22:5:main	2
-../Core/Src/main.c:46:6:SystemClock_Config	3
-../Core/Src/main.c:78:13:MX_GPIO_Init	1
-../Core/Src/main.c:96:13:MX_USART2_UART_Init	2
-../Core/Src/main.c:114:6:sendTriggerPulse	1
-../Core/Src/main.c:121:7:measureDistance	5
-../Core/Src/main.c:151:6:Error_Handler	1
+../Core/Src/main.c:24:5:main	5
+../Core/Src/main.c:79:6:SystemClock_Config	3
+../Core/Src/main.c:111:13:MX_GPIO_Init	1
+../Core/Src/main.c:136:13:MX_USART2_UART_Init	2
+../Core/Src/main.c:154:6:sendTriggerPulse	1
+../Core/Src/main.c:163:7:measureDistance	6
+../Core/Src/main.c:200:6:Error_Handler	1
