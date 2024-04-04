@@ -51,7 +51,7 @@ int main(void)
       }
       else
       {
-        sprintf(buffer, "DIST OBJ: %.2f CM, (AVIÃO DETECTADO NA PISTA)\r\n", distance);
+        sprintf(buffer, "DIST OBJ: %.2f CM, (AERONAVE DETECTADA NA PISTA)\r\n", distance);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (busca)
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET); // Liga o LED branco (piscando)
         HAL_Delay(50);

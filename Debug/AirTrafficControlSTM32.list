@@ -1369,7 +1369,7 @@ int main(void)
       }
       else
       {
-        sprintf(buffer, "DIST OBJ: %.2f CM, (AVIÃO DETECTADO NA PISTA)\r\n", distance);
+        sprintf(buffer, "DIST OBJ: %.2f CM, (AERONAVE DETECTADA NA PISTA)\r\n", distance);
  800101a:	6bb8      	ldr	r0, [r7, #56]	@ 0x38
  800101c:	f7ff fa94 	bl	8000548 <__aeabi_f2d>
  8001020:	4602      	mov	r2, r0
