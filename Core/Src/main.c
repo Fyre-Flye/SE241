@@ -36,14 +36,14 @@ int main(void)
       {
         if (distance < lastDistance)
         {
-          sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO) [PISTA LIBERADA]\r\n", distance);
+          sprintf(buffer, "DIST OBJ: %.2f CM, (POUSANDO) [PISTA BLOQUEADA]\r\n", distance);
           HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (pouso)
           HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED vermelho
           HAL_GPIO_WritePin(GPIOD, GPIO_PIN_6, GPIO_PIN_RESET); // Desliga o LED verde
         }
         else if (distance > lastDistance)
         {
-          sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO) [PISTA BLOQUEADA]\r\n", distance);
+          sprintf(buffer, "DIST OBJ: %.2f CM, (DECOLANDO) [PISTA LIBERADA]\r\n", distance);
           HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Liga o LED LD2 (decolagem)
           HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET); // Desliga o LED vermelho
           HAL_GPIO_WritePin(GPIOD, GPIO_PIN_6, GPIO_PIN_SET); // Liga o LED verde
@@ -113,32 +113,18 @@ static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+  // Ativar o clock para as portas D5, D6 e D7 (GPIO D)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   // Configuração dos pinos de LED LD2, vermelho, verde e branco
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // Voltagem máxima
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH; // Voltagem máxima
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  // Inicializa os LEDs desligados
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_RESET);
 }
 
 static void MX_USART2_UART_Init(void)
